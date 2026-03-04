@@ -10,9 +10,104 @@ username = st.text_input("Username")
 
 # --- ITEM INFO ---
 title = st.text_input("Title")
-media_type = st.selectbox("Type", ["movie", "tv", "music", "book"])
-year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, step=1)
-genre = st.text_input("Genre")
+
+existing_items_query = """
+SELECT id, title, year, genre
+FROM items
+WHERE LOWER(title) = LOWER(:title)
+"""
+
+with engine.begin() as conn:
+    matches = conn.execute(
+        text(existing_items_query),
+        {"title": title}
+    ).fetchall()
+
+    item_data = None  # default if no match
+
+    if matches:
+        options = {f"{row.title} ({row.year})": row.id for row in matches}
+
+        st.warning("⚠ Existing title found. Select below or create a new entry.")
+        selected = st.selectbox(
+            "Existing entries found. Select one or create new:",
+            ["Create New"] + list(options.keys()),
+            key="existing_select"
+        )
+
+        if selected != "Create New":
+            selected_item_id = options[selected]
+            item_data = conn.execute(
+                text("SELECT * FROM items WHERE id=:id"),
+                {"id": selected_item_id}
+            ).mappings().fetchone()  # use .mappings() for dict-like access
+
+            # Save existing title but don't show a duplicate input
+            title = item_data["title"] if item_data else title
+
+            # Prefill directors and actors from DB for the selected item
+            directors_rows = conn.execute(text("""
+                SELECT p.name FROM people p
+                JOIN item_directors id ON p.id = id.person_id
+                WHERE id.item_id = :item_id
+            """), {"item_id": selected_item_id}).fetchall()
+            prefill_directors = [r[0] for r in directors_rows] if directors_rows else []
+
+            actors_rows = conn.execute(text("""
+                SELECT p.name FROM people p
+                JOIN item_actors ia ON p.id = ia.person_id
+                WHERE ia.item_id = :item_id
+            """), {"item_id": selected_item_id}).fetchall()
+            prefill_actors = [r[0] for r in actors_rows] if actors_rows else []
+
+            # Initialize or replace session_state lists when selection changes
+            if ("_last_selected" not in st.session_state) or (st.session_state.get("_last_selected") != selected_item_id):
+                st.session_state.directors = prefill_directors if prefill_directors else [""]
+                st.session_state.actors = prefill_actors if prefill_actors else [""]
+                st.session_state["_last_selected"] = selected_item_id
+                # Mirror values into individual widget keys so text_input shows them
+                for idx, name in enumerate(st.session_state.directors):
+                    st.session_state[f"director_{idx}"] = name
+                for idx, name in enumerate(st.session_state.actors):
+                    st.session_state[f"actor_{idx}"] = name
+
+            media_type = st.selectbox(
+                "Type",
+                ["movie", "tv", "music", "book"],
+                index=["movie", "tv", "music", "book"].index(item_data["type"]) if item_data else 0,
+                key="media_type_existing"
+            )
+
+            year = st.number_input(
+                "Year",
+                min_value=1900,
+                max_value=2100,
+                value=item_data["year"] if item_data else 2026
+            )
+
+            genre = st.text_input(
+                "Genre",
+                value=item_data["genre"] if item_data else ""
+            )
+        else:
+            # "Create New" chosen: reset director/actor session state
+            if "directors" in st.session_state:
+                st.session_state.directors = [""]
+                st.session_state["director_0"] = ""
+            if "actors" in st.session_state:
+                st.session_state.actors = [""]
+                st.session_state["actor_0"] = ""
+            if "_last_selected" in st.session_state:
+                del st.session_state["_last_selected"]
+
+
+if item_data:
+    # Existing item selected: use the prefilled media_type, year, genre above (don't render duplicates)
+    pass
+else:
+    media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], key="media_type_new")
+    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=2026, step=1)
+    genre = st.text_input("Genre")
 
 # --- PEOPLE (comma separated for now) ---
 # --- DIRECTORS ---
@@ -31,7 +126,6 @@ for i in range(len(st.session_state.directors)):
     cols = st.columns([4,1])
     st.session_state.directors[i] = cols[0].text_input(
         f"Director {i+1}",
-        value=st.session_state.directors[i],
         key=f"director_{i}"
     )
     if cols[1].button("X", key=f"remove_director_{i}"):
@@ -58,7 +152,6 @@ for i in range(len(st.session_state.actors)):
     cols = st.columns([4,1])
     st.session_state.actors[i] = cols[0].text_input(
         f"Actor {i+1}",
-        value=st.session_state.actors[i],
         key=f"actor_{i}"
     )
     if cols[1].button("X", key=f"remove_actor_{i}"):
@@ -70,7 +163,7 @@ st.button("Add Actor", on_click=add_actor)
 actors = [a.strip() for a in st.session_state.actors if a.strip()]
 
 # --- RATING ---
-rating = st.slider("Rating", 1, 10)
+rating = st.slider("Rating", 0.0, 10.0, value=5.0, step=0.5, format="%.1f")
 review = st.text_area("Review")
 
 if st.button("Submit"):
@@ -161,3 +254,37 @@ if st.button("Submit"):
         })
 
     st.success("Entry saved successfully.")
+    # Clear form fields so the UI resets for a new entry
+    # Clear simple fields
+    st.session_state["Username"] = ""
+    st.session_state["Title"] = ""
+    st.session_state["Genre"] = ""
+    st.session_state["Review"] = ""
+
+    # Reset rating and year to sensible defaults
+    st.session_state["Year"] = datetime.datetime.now().year
+
+    # Reset selectboxes (both possible keys)
+    st.session_state["existing_select"] = "Create New"
+    st.session_state["media_type_new"] = "movie"
+    st.session_state["media_type_existing"] = "movie"
+
+    # Reset directors and actors lists and widget keys
+    st.session_state.directors = [""]
+    st.session_state.actors = [""]
+    st.session_state["director_0"] = ""
+    st.session_state["actor_0"] = ""
+    # Remove any extra director/actor keys
+    keys_to_del = [k for k in list(st.session_state.keys()) if (k.startswith("director_") or k.startswith("actor_")) and k not in ("director_0","actor_0")]
+    for k in keys_to_del:
+        del st.session_state[k]
+
+    # Reset rating and review
+    st.session_state["Rating"] = 5.0
+    st.session_state["Review"] = ""
+
+    # Clear internal selection marker
+    if "_last_selected" in st.session_state:
+        del st.session_state["_last_selected"]
+
+    st.experimental_rerun()

@@ -14,11 +14,11 @@ def init_db():
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
+            title TEXT COLLATE NOCASE,
             type TEXT,
             year INTEGER,
             genre TEXT,
-            unique(title, genre, year)
+            UNIQUE(title, type, year)
         );
         """))
 
