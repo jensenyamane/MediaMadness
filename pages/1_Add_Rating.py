@@ -111,7 +111,7 @@ if item_data:
     # Existing item selected: use the prefilled media_type, year, genre above (don't render duplicates)
     pass
 else:
-    media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], key="media_type_new")
+    media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], key="media_type_new", index=None)
     year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=2026, step=1, key="year_input")
     genre = st.text_input("Genre", key="genre_input_new")
 
@@ -184,7 +184,7 @@ def reset_form():
     st.session_state["rating_input"] = 5.0
     st.session_state["year_input"] = datetime.datetime.now().year
     st.session_state["media_type_new"] = "movie"
-    st.session_state["media_type_existing"] = "movie"
+    st.session_state["media_type_existing"] = ""
     st.session_state["existing_select"] = "Create New"
     st.session_state.directors = [""]
     st.session_state.actors = [""]

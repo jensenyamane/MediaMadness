@@ -17,3 +17,6 @@ A simple Streamlit app template for you to modify!
    ```
    $ streamlit run streamlit_app.py
    ```
+
+FIX ME:
+the rating count is not working correctly
