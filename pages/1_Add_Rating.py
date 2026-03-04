@@ -11,7 +11,7 @@ username = st.text_input("Username")
 # --- ITEM INFO ---
 title = st.text_input("Title")
 media_type = st.selectbox("Type", ["movie", "tv", "music", "book"])
-year = st.number_input("Year", min_value=1915, max_value=datetime.datetime.now().year, step=1)
+year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, step=1)
 genre = st.text_input("Genre")
 
 # --- PEOPLE (comma separated for now) ---
