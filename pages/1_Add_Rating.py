@@ -79,9 +79,6 @@ if st.button("Submit"):
         st.error("Username and title are required.")
         st.stop()
 
-    directors = [d.strip() for d in directors_input.split(",") if d.strip()]
-    actors = [a.strip() for a in actors_input.split(",") if a.strip()]
-
     with engine.begin() as conn:
 
         # --- USER ---
