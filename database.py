@@ -14,12 +14,32 @@ def init_db():
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
             type TEXT,
+            title TEXT,
             year INTEGER,
-            director TEXT,
             genre TEXT,
-            starring TEXT
+            unique(title, genre, year)
+        );
+        """))
+
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS people (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT
+        );
+        """))
+
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS people_directors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            person_id TEXT
+        );
+        """))
+
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS people_actors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            person_id TEXT
         );
         """))
 
@@ -31,7 +51,8 @@ def init_db():
             rating INTEGER,
             review TEXT,
             FOREIGN KEY(user_id) REFERENCES users(id),
-            FOREIGN KEY(item_id) REFERENCES items(id)
+            FOREIGN KEY(item_id) REFERENCES items(id),
+            unique(item_id, user_id)
         );
         """))
 
