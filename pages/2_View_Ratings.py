@@ -12,7 +12,7 @@ query = """
         i.type,
         i.year,
         i.genre,
-        ROUND(AVG(r.rating), 2) AS avg_rating,
+        ROUND(AVG(r.rating), 1) AS avg_rating,
         COUNT(r.rating) AS rating_count,
 
         GROUP_CONCAT(DISTINCT d.name) AS directors,

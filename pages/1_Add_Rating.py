@@ -5,11 +5,16 @@ import datetime
 
 st.title("Add Item + Rating")
 
+# Clear form state if success message was just shown
+if st.session_state.get("show_success"):
+    st.success("Entry saved successfully.")
+    st.session_state["show_success"] = False
+
 # --- USER ---
-username = st.text_input("Username")
+username = st.text_input("Username", key="username_input")
 
 # --- ITEM INFO ---
-title = st.text_input("Title")
+title = st.text_input("Title", key="title_input")
 
 existing_items_query = """
 SELECT id, title, year, genre
@@ -87,7 +92,8 @@ with engine.begin() as conn:
 
             genre = st.text_input(
                 "Genre",
-                value=item_data["genre"] if item_data else ""
+                value=item_data["genre"] if item_data else "",
+                key="genre_input_existing"
             )
         else:
             # "Create New" chosen: reset director/actor session state
@@ -106,8 +112,8 @@ if item_data:
     pass
 else:
     media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], key="media_type_new")
-    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=2026, step=1)
-    genre = st.text_input("Genre")
+    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=2026, step=1, key="year_input")
+    genre = st.text_input("Genre", key="genre_input_new")
 
 # --- PEOPLE (comma separated for now) ---
 # --- DIRECTORS ---
@@ -163,10 +169,36 @@ st.button("Add Actor", on_click=add_actor)
 actors = [a.strip() for a in st.session_state.actors if a.strip()]
 
 # --- RATING ---
-rating = st.slider("Rating", 0.0, 10.0, value=5.0, step=0.5, format="%.1f")
-review = st.text_area("Review")
+rating = st.slider("Rating", 0.0, 10.0, value=5.0, step=0.5, format="%.1f", key="rating_input")
+review = st.text_area("Review", key="review_input")
 
-if st.button("Submit"):
+# Submit and Reset buttons side-by-side
+col1, col2 = st.columns(2)
+
+def reset_form():
+    st.session_state["username_input"] = ""
+    st.session_state["title_input"] = ""
+    st.session_state["genre_input_existing"] = ""
+    st.session_state["genre_input_new"] = ""
+    st.session_state["review_input"] = ""
+    st.session_state["rating_input"] = 5.0
+    st.session_state["year_input"] = datetime.datetime.now().year
+    st.session_state["media_type_new"] = "movie"
+    st.session_state["media_type_existing"] = "movie"
+    st.session_state["existing_select"] = "Create New"
+    st.session_state.directors = [""]
+    st.session_state.actors = [""]
+    st.session_state["director_0"] = ""
+    st.session_state["actor_0"] = ""
+    if "_last_selected" in st.session_state:
+        del st.session_state["_last_selected"]
+
+with col1:
+    submit_button = st.button("Submit")
+with col2:
+    st.button("Reset Form", on_click=reset_form)
+
+if submit_button:
 
     if not username or not title:
         st.error("Username and title are required.")
@@ -253,38 +285,6 @@ if st.button("Submit"):
             "review": review
         })
 
-    st.success("Entry saved successfully.")
-    # Clear form fields so the UI resets for a new entry
-    # Clear simple fields
-    st.session_state["Username"] = ""
-    st.session_state["Title"] = ""
-    st.session_state["Genre"] = ""
-    st.session_state["Review"] = ""
-
-    # Reset rating and year to sensible defaults
-    st.session_state["Year"] = datetime.datetime.now().year
-
-    # Reset selectboxes (both possible keys)
-    st.session_state["existing_select"] = "Create New"
-    st.session_state["media_type_new"] = "movie"
-    st.session_state["media_type_existing"] = "movie"
-
-    # Reset directors and actors lists and widget keys
-    st.session_state.directors = [""]
-    st.session_state.actors = [""]
-    st.session_state["director_0"] = ""
-    st.session_state["actor_0"] = ""
-    # Remove any extra director/actor keys
-    keys_to_del = [k for k in list(st.session_state.keys()) if (k.startswith("director_") or k.startswith("actor_")) and k not in ("director_0","actor_0")]
-    for k in keys_to_del:
-        del st.session_state[k]
-
-    # Reset rating and review
-    st.session_state["Rating"] = 5.0
-    st.session_state["Review"] = ""
-
-    # Clear internal selection marker
-    if "_last_selected" in st.session_state:
-        del st.session_state["_last_selected"]
-
-    st.experimental_rerun()
+    # Set flag to show success on next render, then rerun
+    st.session_state["show_success"] = True
+    st.rerun()
