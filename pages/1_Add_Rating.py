@@ -102,7 +102,7 @@ with engine.begin() as conn:
             # media_type_index = ["movie", "tv", "music", "book"].index(media_type_value) if media_type_value in ["movie", "tv", "music", "book"] else 0
             media_type_index = ["movie"].index(media_type_value) if media_type_value in ["movie"] else 0
             media_type = st.selectbox(
-                "Type",
+                "Media Type",
                 ["movie"],
                 index=media_type_index,
                 key="media_type_existing"
@@ -140,7 +140,7 @@ else:
     # media_type_index = ["movie", "tv", "music", "book"].index(media_type_value) if media_type_value in ["movie", "tv", "music", "book"] else None
     media_type_index = ["movie"].index(media_type_value) if media_type_value in ["movie"] else 0
     # media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], index=media_type_index, key="media_type_new")
-    media_type = st.selectbox("Type", ["movie"], index=media_type_index, key="media_type_new")
+    media_type = st.selectbox("Media Type", ["movie"], index=media_type_index, key="media_type_new")
     year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=st.session_state.get("year_input", 2026), step=1, key="year_input")
     genre = st.text_input("Genre", key="genre_input_new")
 
