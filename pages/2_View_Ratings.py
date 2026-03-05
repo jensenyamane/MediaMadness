@@ -13,7 +13,7 @@ query = """
         i.year,
         i.genre,
         ROUND(AVG(r.rating), 1) AS avg_rating,
-        COUNT(r.rating) AS rating_count,
+        COUNT(DISTINCT r.id) AS rating_count,
 
         GROUP_CONCAT(DISTINCT d.name) AS directors,
         GROUP_CONCAT(DISTINCT a.name) AS actors
