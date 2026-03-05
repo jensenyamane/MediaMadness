@@ -111,13 +111,13 @@ with engine.begin() as conn:
             year = st.number_input(
                 "Year",
                 min_value=1900,
-                max_value=2100,
-                value=st.session_state.get("year_input", item_data["year"] if item_data else 2026)
+                max_value=datetime.datetime.now().year,
+                value=item_data["year"] if item_data else datetime.datetime.now().year
             )
 
             genre = st.text_input(
                 "Genre",
-                value=st.session_state.get("genre_input_existing", item_data["genre"] if item_data else ""),
+                value=item_data["genre"] if item_data else "",
                 key="genre_input_existing"
             )
         else:
@@ -141,7 +141,12 @@ else:
     media_type_index = ["movie"].index(media_type_value) if media_type_value in ["movie"] else 0
     # media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], index=media_type_index, key="media_type_new")
     media_type = st.selectbox("Media Type", ["movie"], index=media_type_index, key="media_type_new")
-    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=st.session_state.get("year_input", 2026), step=1, key="year_input")
+    year = st.number_input(
+        "Year", 
+        min_value=0, 
+        max_value=datetime.datetime.now().year, 
+        value=datetime.datetime.now().year
+    )
     genre = st.text_input("Genre", key="genre_input_new")
 
 # --- PEOPLE (comma separated for now) ---
