@@ -13,8 +13,7 @@ def reset_form():
     st.session_state["review_input"] = ""
     st.session_state["rating_input"] = 5.0
     st.session_state["year_input"] = datetime.datetime.now().year
-    st.session_state["media_type_new"] = "movie"
-    st.session_state["media_type_existing"] = ""
+    st.session_state["media_type_new"] = "movie" # = "" when the other media types are added
     st.session_state["existing_select"] = "Create New"
     st.session_state.directors = [""]
     st.session_state.actors = [""]
@@ -99,10 +98,13 @@ with engine.begin() as conn:
                 for idx, name in enumerate(st.session_state.actors):
                     st.session_state[f"actor_{idx}"] = name
 
+            media_type_value = st.session_state.get("media_type_existing", item_data["type"])
+            # media_type_index = ["movie", "tv", "music", "book"].index(media_type_value) if media_type_value in ["movie", "tv", "music", "book"] else 0
+            media_type_index = ["movie"].index(media_type_value) if media_type_value in ["movie"] else 0
             media_type = st.selectbox(
                 "Type",
-                ["movie", "tv", "music", "book"],
-                index=["movie", "tv", "music", "book"].index(item_data["type"]) if item_data else 0,
+                ["movie"],
+                index=media_type_index,
                 key="media_type_existing"
             )
 
@@ -110,12 +112,12 @@ with engine.begin() as conn:
                 "Year",
                 min_value=1900,
                 max_value=2100,
-                value=item_data["year"] if item_data else 2026
+                value=st.session_state.get("year_input", item_data["year"] if item_data else 2026)
             )
 
             genre = st.text_input(
                 "Genre",
-                value=item_data["genre"] if item_data else "",
+                value=st.session_state.get("genre_input_existing", item_data["genre"] if item_data else ""),
                 key="genre_input_existing"
             )
         else:
@@ -134,8 +136,12 @@ if item_data:
     # Existing item selected: use the prefilled media_type, year, genre above (don't render duplicates)
     pass
 else:
-    media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], key="media_type_new", index=None)
-    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=2026, step=1, key="year_input")
+    media_type_value = st.session_state.get("media_type_new")
+    # media_type_index = ["movie", "tv", "music", "book"].index(media_type_value) if media_type_value in ["movie", "tv", "music", "book"] else None
+    media_type_index = ["movie"].index(media_type_value) if media_type_value in ["movie"] else 0
+    # media_type = st.selectbox("Type", ["movie", "tv", "music", "book"], index=media_type_index, key="media_type_new")
+    media_type = st.selectbox("Type", ["movie"], index=media_type_index, key="media_type_new")
+    year = st.number_input("Year", min_value=0, max_value=datetime.datetime.now().year, value=st.session_state.get("year_input", 2026), step=1, key="year_input")
     genre = st.text_input("Genre", key="genre_input_new")
 
 # --- PEOPLE (comma separated for now) ---
@@ -192,8 +198,9 @@ st.button("Add Actor", on_click=add_actor)
 actors = [a.strip() for a in st.session_state.actors if a.strip()]
 
 # --- RATING ---
-rating = st.slider("Rating", 0.0, 10.0, value=5.0, step=0.5, format="%.1f", key="rating_input")
+rating = st.slider("Rating", 0.0, 10.0, value=st.session_state.get("rating_input", 5.0), step=0.5, format="%.1f", key="rating_input")
 review = st.text_area("Review", key="review_input")
+date_of_review = datetime.datetime.now().date()  # capture current date for rating
 
 # Submit and Reset buttons side-by-side
 col1, col2 = st.columns(2)

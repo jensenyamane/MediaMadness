@@ -3,20 +3,19 @@ import pandas as pd
 from sqlalchemy import text
 from database import engine
 
-st.title("All Media")
+st.title("Top Movies")
 
 query = """
     SELECT 
-        i.id,
+        row_number() OVER (ORDER BY ROUND(AVG(r.rating), 1) DESC, year asc) AS rank,
         i.title,
-        i.type,
         i.year,
         i.genre,
         ROUND(AVG(r.rating), 1) AS avg_rating,
         COUNT(DISTINCT r.id) AS rating_count,
 
-        GROUP_CONCAT(DISTINCT d.name) AS directors,
-        GROUP_CONCAT(DISTINCT a.name) AS actors
+        GROUP_CONCAT(DISTINCT d.name) AS "director(s)",
+        GROUP_CONCAT(DISTINCT a.name) AS "actor(s)"
 
     FROM items i
 
@@ -29,11 +28,11 @@ query = """
     LEFT JOIN people a ON ia.person_id = a.id
 
     GROUP BY i.id
-    ORDER BY avg_rating DESC
+    ORDER BY avg_rating DESC, year asc
 """
 
 with engine.connect() as conn:
     result = conn.execute(text(query))
     df = pd.DataFrame(result.fetchall(), columns=result.keys())
 
-st.dataframe(df, width='stretch')
+st.dataframe(df, width='stretch', hide_index=True)

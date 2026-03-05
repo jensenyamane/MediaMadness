@@ -54,6 +54,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             item_id INTEGER,
+            date_of_review DATE,
             rating INTEGER,
             review TEXT,
             FOREIGN KEY(user_id) REFERENCES users(id),
