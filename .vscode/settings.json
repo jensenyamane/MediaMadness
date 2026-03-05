@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /workspaces/MediaMadness && python3 -c \"\nfrom database import engine\nfrom sqlalchemy import text\nwith engine\\.connect\\(\\) as conn:\n    result = conn\\.execute\\(text\\('SELECT COUNT\\(\\*\\) FROM users'\\)\\)\\.fetchone\\(\\)\n    print\\('Users:', result\\[0\\]\\)\n    result = conn\\.execute\\(text\\('SELECT COUNT\\(\\*\\) FROM items'\\)\\)\\.fetchone\\(\\)\n    print\\('Items:', result\\[0\\]\\)\n    result = conn\\.execute\\(text\\('SELECT COUNT\\(\\*\\) FROM people'\\)\\)\\.fetchone\\(\\)\n    print\\('People:', result\\[0\\]\\)\n    result = conn\\.execute\\(text\\('SELECT COUNT\\(\\*\\) FROM ratings'\\)\\)\\.fetchone\\(\\)\n    print\\('Ratings:', result\\[0\\]\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

@@ -5,5 +5,7 @@ st.set_page_config(page_title="Media Ratings", layout="wide")
 
 init_db()
 
-st.title("Media Rating App")
-st.write("Database initialized.")
+st.title("Media Madness")
+st.write("This app was made on Streamlit. They let us do this for free but this is the first page" \
+"has to be called streamlit app. I guess it's their version of a watermark. Anyways, click any of the \
+other options to get started.")

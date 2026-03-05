@@ -5,16 +5,39 @@ import datetime
 
 st.title("Add Item + Rating")
 
+def reset_form():
+    st.session_state["username_input"] = ""
+    st.session_state["title_input"] = ""
+    st.session_state["genre_input_existing"] = ""
+    st.session_state["genre_input_new"] = ""
+    st.session_state["review_input"] = ""
+    st.session_state["rating_input"] = 5.0
+    st.session_state["year_input"] = datetime.datetime.now().year
+    st.session_state["media_type_new"] = "movie"
+    st.session_state["media_type_existing"] = ""
+    st.session_state["existing_select"] = "Create New"
+    st.session_state.directors = [""]
+    st.session_state.actors = [""]
+    st.session_state["director_0"] = ""
+    st.session_state["actor_0"] = ""
+    if "_last_selected" in st.session_state:
+        del st.session_state["_last_selected"]
+
 # Clear form state if success message was just shown
 if st.session_state.get("show_success"):
     st.success("Entry saved successfully.")
     st.session_state["show_success"] = False
 
+# Reset form if flag is set
+if st.session_state.get("do_reset"):
+    reset_form()
+    st.session_state["do_reset"] = False
+
 # --- USER ---
-username = st.text_input("Username", key="username_input")
+username = st.text_input("Username", key="username_input").strip()
 
 # --- ITEM INFO ---
-title = st.text_input("Title", key="title_input")
+title = st.text_input("Title", key="title_input").strip()
 
 existing_items_query = """
 SELECT id, title, year, genre
@@ -175,24 +198,6 @@ review = st.text_area("Review", key="review_input")
 # Submit and Reset buttons side-by-side
 col1, col2 = st.columns(2)
 
-def reset_form():
-    st.session_state["username_input"] = ""
-    st.session_state["title_input"] = ""
-    st.session_state["genre_input_existing"] = ""
-    st.session_state["genre_input_new"] = ""
-    st.session_state["review_input"] = ""
-    st.session_state["rating_input"] = 5.0
-    st.session_state["year_input"] = datetime.datetime.now().year
-    st.session_state["media_type_new"] = "movie"
-    st.session_state["media_type_existing"] = ""
-    st.session_state["existing_select"] = "Create New"
-    st.session_state.directors = [""]
-    st.session_state.actors = [""]
-    st.session_state["director_0"] = ""
-    st.session_state["actor_0"] = ""
-    if "_last_selected" in st.session_state:
-        del st.session_state["_last_selected"]
-
 with col1:
     submit_button = st.button("Submit")
 with col2:
@@ -200,8 +205,23 @@ with col2:
 
 if submit_button:
 
-    if not username or not title:
-        st.error("Username and title are required.")
+    if not username:
+        st.error("Please enter a username")
+        st.stop()
+    if not title:
+        st.error("Please enter a title")
+        st.stop()
+    if not media_type:
+        st.error("Please select a media type")
+        st.stop()
+    if not genre:
+        st.error("Please enter a genre")
+        st.stop()
+    if not rating:
+        st.error("Please select a rating")
+        st.stop()
+    if not review:
+        st.error("Please enter a review")
         st.stop()
 
     with engine.begin() as conn:
@@ -286,5 +306,6 @@ if submit_button:
         })
 
     # Set flag to show success on next render, then rerun
+    st.session_state["do_reset"] = True
     st.session_state["show_success"] = True
     st.rerun()
