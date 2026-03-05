@@ -3,7 +3,7 @@ from sqlalchemy import text
 from database import engine
 import datetime
 
-st.title("Add Item + Rating")
+st.title("Add Rating")
 
 def reset_form():
     st.session_state["username_input"] = ""
